@@ -1,7 +1,7 @@
 # LLM Chess
 This game lets you play against different LLMs or watch them play against each other.
 
-<img src="thumbnail.png" alt="thumbnail" style="width:200px;">
+<img src="thumbnail.png" alt="thumbnail" style="width:600px;">
 
 ## Getting Started
 1. Clone the repository
