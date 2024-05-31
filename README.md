@@ -1,36 +1,20 @@
-# ChessEngine
+# LLM Chess
+This game lets you play against different LLMs or watch them play against each other.
 
-This is a ChessEngine implemented with the minimax algorithm. Black is played by the ChessEngine. 
+<img src="thumbnail.png" alt="thumbnail" style="width:200px;">
 
-Presentation Link
-https://docs.google.com/presentation/d/1e-2kfJnDqCgey7RU_Q-FqPf-d-5Aqk26IF-XqMHE72s/edit#slide=id.p
-
-Premise of Minimax:
-- Explore all my possible moves, try to maximize my score
-- For each of my moves, explore all the opponents’ possible moves (assume they play optimally)
-  -  I.e. the opponent will try to minimize the score
-- Return the best move leading to the leaf with the best score
-The score is determined by an evaluation function that takes into account piece points, their position on the board, and whether the king is in check.
-However, there are an exponential number of possible board states and searching through all possible moves would take a lot of time.
-
-To speed up the minimax search, we implemented a variety of methods/techniques:
-- Alpha-beta pruning
-- Iterative deepening minimax
-- Move ordering
-  - Assigning Move Scores
-  - Late Move Reduction
-  - Static Exchange Evaluation
-- Book Openings
-
-# File Structure
-- Pieces Folder contains python classes for each piece
-- chess_board.py contains board and move logic
-- chess_gui.py contains the GUI
-- engine.py contains the minimax algorithm
-- piece_square_tables.py contains the position points 
-
-# Instructions to Run ChessEngine
-- Download/clone repository
-- Run command `python chess_gui.py`
-- Make moves and play against the ChessEngine
-
+## Getting Started
+1. Clone the repository
+2. Create a Neutrino API key at https://neutrinoapp.com/
+3. Create a `.env` file in the root directory of the project and add the following line:
+```
+NEUTRINO_API_KEY=your_api_key
+```
+4. Run the following command to install the required packages:
+```
+pip install -r requirements.txt
+```
+5. Run the following command to start the game:
+```
+python chess_gui.py
+```
