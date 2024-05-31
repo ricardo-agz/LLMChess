@@ -21,8 +21,14 @@ class Queen(ChessPiece):
 
         # Define direction vectors
         directions = [
-            (1, 0), (-1, 0), (0, 1), (0, -1),    # Horizontal and vertical
-            (1, 1), (1, -1), (-1, 1), (-1, -1)   # Diagonal
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1),  # Horizontal and vertical
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),  # Diagonal
         ]
 
         # Iterate through directions
@@ -46,5 +52,11 @@ class Queen(ChessPiece):
     def to_str(self):
         return "Queen"
 
+    @staticmethod
+    def to_char():
+        return "Q"
+
     def __str__(self):
-        return f"<{self.color.value.title()} Queen at {position_to_string(self.position)}>"
+        return (
+            f"<{self.color.value.title()} Queen at {position_to_string(self.position)}>"
+        )

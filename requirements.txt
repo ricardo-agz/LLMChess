@@ -1,1 +1,6 @@
 Pillow==9.4.0
+openai
+pyyaml
+pydantic
+python-dotenv
+json5

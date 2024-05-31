@@ -25,14 +25,22 @@ class Pawn(ChessPiece):
                 moves.append((row - 1, col))
 
             # Two squares forward from the starting position
-            if row == 6 and board.is_square_empty((row - 1, col)) and board.is_square_empty((row - 2, col)):
+            if (
+                row == 6
+                and board.is_square_empty((row - 1, col))
+                and board.is_square_empty((row - 2, col))
+            ):
                 moves.append((row - 2, col))
 
             # Capture moves
             if 0 <= row - 1 < 8:
-                if 0 <= col - 1 < 8 and board.is_opponent_piece(self.color, (row - 1, col - 1)):
+                if 0 <= col - 1 < 8 and board.is_opponent_piece(
+                    self.color, (row - 1, col - 1)
+                ):
                     moves.append((row - 1, col - 1))
-                if 0 <= col + 1 < 8 and board.is_opponent_piece(self.color, (row - 1, col + 1)):
+                if 0 <= col + 1 < 8 and board.is_opponent_piece(
+                    self.color, (row - 1, col + 1)
+                ):
                     moves.append((row - 1, col + 1))
 
         else:  # "black"
@@ -41,14 +49,22 @@ class Pawn(ChessPiece):
                 moves.append((row + 1, col))
 
             # Two squares forward from the starting position
-            if row == 1 and board.is_square_empty((row + 1, col)) and board.is_square_empty((row + 2, col)):
+            if (
+                row == 1
+                and board.is_square_empty((row + 1, col))
+                and board.is_square_empty((row + 2, col))
+            ):
                 moves.append((row + 2, col))
 
             # Capture moves
             if 0 <= row + 1 < 8:
-                if 0 <= col - 1 < 8 and board.is_opponent_piece(self.color, (row + 1, col - 1)):
+                if 0 <= col - 1 < 8 and board.is_opponent_piece(
+                    self.color, (row + 1, col - 1)
+                ):
                     moves.append((row + 1, col - 1))
-                if 0 <= col + 1 < 8 and board.is_opponent_piece(self.color, (row + 1, col + 1)):
+                if 0 <= col + 1 < 8 and board.is_opponent_piece(
+                    self.color, (row + 1, col + 1)
+                ):
                     moves.append((row + 1, col + 1))
 
         return moves
@@ -56,6 +72,11 @@ class Pawn(ChessPiece):
     def to_str(self):
         return "Pawn"
 
+    @staticmethod
+    def to_char():
+        return "P"
+
     def __str__(self):
-        return f"<{self.color.value.title()} Pawn at {position_to_string(self.position)}>"
-        
+        return (
+            f"<{self.color.value.title()} Pawn at {position_to_string(self.position)}>"
+        )

@@ -2,7 +2,14 @@ from copy import copy, deepcopy
 from typing import Optional
 
 from pieces import ChessPiece, PlayerColor, Rook, Knight, Bishop, King, Queen, Pawn
-from piece_square_tables import pst_pawn, pst_knight, pst_bishop, pst_king, pst_rook, pst_queen
+from piece_square_tables import (
+    pst_pawn,
+    pst_knight,
+    pst_bishop,
+    pst_king,
+    pst_rook,
+    pst_queen,
+)
 
 Position = tuple[int, int]
 
@@ -17,15 +24,77 @@ class ChessBoard:
 
         self.moves = []
 
+    def set_board_state(self, board_state: list[list[Optional[ChessPiece]]]):
+        self.board = deepcopy(board_state)
+
+    def get_board_state(self) -> list[list[Optional[ChessPiece]]]:
+        return deepcopy(self.board)
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the board state
+        """
+        board_str = ""
+        for row in range(8):
+            board_str += str(8 - row) + " "
+            for col in range(8):
+                piece = self.get_piece((row, col))
+                if piece is None:
+                    board_str += "· "
+                else:
+                    piece_char = piece.to_char()
+                    if piece.color == PlayerColor.WHITE:
+                        board_str += piece_char.upper() + " "
+                    else:
+                        board_str += piece_char.lower() + " "
+            board_str += "\n"
+        board_str += "  a b c d e f g h"
+        return board_str
+
+    def get_valid_moves_str(self, color: PlayerColor) -> str:
+        """
+        Returns a string representation of all valid moves for a given player
+        """
+        out_str = ""
+
+        valid_moves = self.get_possible_moves(color)
+        for piece, moves in valid_moves:
+            if len(moves) > 0:
+                piece_name = piece.to_str()
+                piece_position = self.get_position_string(piece.position)
+                move_strings = [self.get_position_string(move) for move in moves]
+                out_str += f"{piece_name} at {piece_position}: {', '.join(move_strings)}\n"
+
+        return out_str
+
+    @staticmethod
+    def get_position_string(position: Position) -> str:
+        """
+        Returns the string representation of a position (e.g., 'e4', 'a8')
+        """
+        row, col = position
+        col_str = chr(ord('a') + col)
+        row_str = str(8 - row)
+        return col_str + row_str
+
+    @staticmethod
+    def get_position_tuple(position_str: str) -> Position:
+        """
+        Returns the tuple representation of a position string (e.g., 'e4', 'a8')
+        """
+        col_str = position_str[0]
+        row_str = position_str[1]
+        col = ord(col_str) - ord('a')
+        row = 8 - int(row_str)
+        return row, col
+
     def create_empty_board(self) -> list[list[Optional[ChessPiece]]]:
         """Create an empty 8x8 chess board"""
         return [[None] * 8 for _ in range(8)]
 
     def place_pieces(self):
         """Places chess pieces in starting positions of chess board"""
-        pieces = [
-            Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook
-        ]
+        pieces = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
 
         for i, Piece in enumerate(pieces):
             self.board[0][i] = Piece(PlayerColor.BLACK, (0, i))
@@ -87,7 +156,9 @@ class ChessBoard:
         # Check if the king is in check after the move
         return not board_copy.is_king_in_check(color)
 
-    def get_possible_moves(self, color: PlayerColor) -> list[tuple[ChessPiece, list[Position]]]:
+    def get_possible_moves(
+        self, color: PlayerColor
+    ) -> list[tuple[ChessPiece, list[Position]]]:
         """
         Returns a list of all pieces and their possible moves on the board for a given player
         """
@@ -97,10 +168,16 @@ class ChessBoard:
         king_moves = []
         for piece in pieces:
             possible_moves = piece.get_possible_moves(self)
-            valid_piece_moves = [move for move in possible_moves if self.is_move_valid(piece, move)]
+            valid_piece_moves = [
+                move for move in possible_moves if self.is_move_valid(piece, move)
+            ]
 
             # Handle castling moves for King
-            if isinstance(piece, King) and not piece.has_moved and not self.is_king_in_check(color):
+            if (
+                isinstance(piece, King)
+                and not piece.has_moved
+                and not self.is_king_in_check(color)
+            ):
                 if self.can_castle_kingside(color):
                     valid_piece_moves.append((piece.position[0], 6))
                 if self.can_castle_queenside(color):
@@ -109,27 +186,24 @@ class ChessBoard:
             valid_moves.append((piece, valid_piece_moves))
 
         return valid_moves
-        # for piece in pieces:
-        #     possible_moves = piece.get_possible_moves(self)
-        #     valid_piece_moves = [move for move in possible_moves if self.is_move_valid(piece, move)]
-        #     if isinstance(piece, King):
-        #         king_moves = valid_piece_moves
-        #                 # Handle castling moves for King
-        #     if piece.has_moved and not self.is_king_in_check(color):
-        #         if self.can_castle_kingside(color):
-        #             valid_piece_moves.append((piece.position[0], 6))
-        #         if self.can_castle_queenside(color):
-        #             valid_piece_moves.append((piece.position[0], 2))
-        #         king_moves.extend(valid_piece_moves)
-        #     valid_moves.append((piece, valid_piece_moves))
-        
 
-        
-        # valid_moves.append((piece, valid_piece_moves))
+    def get_material_count(self):
+        """
+        Returns the total value of pieces for each player
+        """
+        white_score = 0
+        black_score = 0
+        for row in range(8):
+            for col in range(8):
+                piece = self.get_piece((row, col))
+                if piece is not None:
+                    if piece.color == PlayerColor.WHITE:
+                        white_score += piece.value
+                    else:
+                        black_score += piece.value
+        return white_score, black_score
 
-        # return valid_moves
-
-    def move_piece(self, piece: ChessPiece, new_position: Position) -> bool:
+    def move_piece(self, piece: ChessPiece, new_position: Position) -> tuple[bool, bool]:
         """
         Moves a piece on the board, returns False if invalid move
         """
@@ -145,7 +219,7 @@ class ChessBoard:
 
         if new_position not in valid_moves:
             print("Illegal move:/")
-            return False
+            return False, False
 
         old_row, old_col = piece.position
         new_row, new_col = new_position
@@ -153,13 +227,26 @@ class ChessBoard:
         # record move
         self.moves.append((piece.to_str(), piece.position, new_position))
 
+        was_capture = not self.is_square_empty(new_position)
+        was_pawn_move = isinstance(piece, Pawn) and (old_row != new_row or old_col != new_col)
+
         # Move the piece
         self.board[old_row][old_col] = None
         self.board[new_row][new_col] = piece
         piece.position = new_position
 
+        # Check for pawn promotion
+        if isinstance(piece, Pawn):
+            if (piece.color == PlayerColor.WHITE and new_row == 0) or (
+                    piece.color == PlayerColor.BLACK and new_row == 7):
+                self.board[new_row][new_col] = Queen(piece.color, new_position)
+
         # If Castle move: Move the Rook as well
-        if isinstance(piece, King) and not piece.has_moved and abs(old_col - new_col) == 2:
+        if (
+            isinstance(piece, King)
+            and not piece.has_moved
+            and abs(old_col - new_col) == 2
+        ):
             # Castling kingside
             if new_col > old_col:
                 rook = self.get_piece((old_row, 7))
@@ -170,7 +257,7 @@ class ChessBoard:
                     rook.has_moved = True
                 else:
                     print("Illegal move:/")
-                    return False
+                    return False, False
             # Castling queenside
             else:
                 rook = self.get_piece((old_row, 0))
@@ -181,18 +268,22 @@ class ChessBoard:
                     rook.has_moved = True
                 else:
                     print("Illegal move:/")
-                    return False
-        
+                    return False, False
+
         # Castling Purposes: If piece=King or Rook, set has_moved to True
         if isinstance(piece, King) or isinstance(piece, Rook):
             piece.has_moved = True
-        return True
+        return True, was_capture or was_pawn_move
 
-    def get_opponent_possible_moves_without_check(self, color: PlayerColor) -> list[Position]:
+    def get_opponent_possible_moves_without_check(
+        self, color: PlayerColor
+    ) -> list[Position]:
         """
         Returns a list of all possible moves for the opponent without checking for check.
         """
-        opponent_color = PlayerColor.WHITE if color == PlayerColor.BLACK else PlayerColor.BLACK
+        opponent_color = (
+            PlayerColor.WHITE if color == PlayerColor.BLACK else PlayerColor.BLACK
+        )
         opponent_pieces = self.get_pieces(opponent_color)
         opponent_possible_moves = []
 
@@ -232,7 +323,7 @@ class ChessBoard:
             for move in possible_moves:
                 board_copy = deepcopy(self)
                 piece_copy = deepcopy(curr_piece)
-                
+
                 # Try the move and continue to the next move if it is invalid
                 move_result = board_copy.move_piece(piece_copy, move)
                 if not move_result:
@@ -243,7 +334,6 @@ class ChessBoard:
                     return False
 
         return True
-
 
     def is_stalemate(self, color: PlayerColor) -> bool:
         """
@@ -258,7 +348,7 @@ class ChessBoard:
             for move in possible_moves:
                 board_copy = deepcopy(self)
                 piece_copy = deepcopy(curr_piece)
-                
+
                 # Try the move and continue to the next move if it is invalid
                 move_result = board_copy.move_piece(piece_copy, move)
                 if not move_result:
@@ -270,14 +360,13 @@ class ChessBoard:
 
         return True
 
-
     # Game Score Function
     def evaluation_function(self):
-        '''
+        """
         This function will return a score for the current board state
         If white is winning it would return a positive number, if black is winning negative.
         If either side is in checkmate it will return inf or -inf
-        '''
+        """
         if self.is_checkmate(PlayerColor.WHITE):
             print("i have been checkmated by a robot...")
             return float("infinity")
@@ -290,7 +379,7 @@ class ChessBoard:
                 for col in range(8):
                     piece = self.get_piece((row, col))
                     if piece is not None:
-                        row_flip = row if piece.color == PlayerColor.WHITE else 7-row
+                        row_flip = row if piece.color == PlayerColor.WHITE else 7 - row
 
                         # calculate a multiplier based on the position of the piece
                         position_score = 0
@@ -306,12 +395,16 @@ class ChessBoard:
                             position_score += pst_queen[row_flip][col]
                         elif isinstance(piece, King):
                             position_score += pst_king[row_flip][col]
-                        
+
                         position_multiple = (position_score + 100) / 100
                         added_score = piece.value * 10 * position_multiple
 
-                        min_max_multiplier = 1 if piece.color == PlayerColor.WHITE else -1
-                        score += added_score * min_max_multiplier # multiply by -1 if player is black
+                        min_max_multiplier = (
+                            1 if piece.color == PlayerColor.WHITE else -1
+                        )
+                        score += (
+                            added_score * min_max_multiplier
+                        )  # multiply by -1 if player is black
 
                         mobility = len(piece.get_possible_moves(self)) * 0.2
                         added_score += mobility
@@ -324,51 +417,51 @@ class ChessBoard:
 
     def __hash__(self):
         # Use a tuple of tuples containing the board state as the hash input
-        return hash(tuple(tuple(self.board[row][col] for col in range(8)) for row in range(8)))
+        return hash(
+            tuple(tuple(self.board[row][col] for col in range(8)) for row in range(8))
+        )
 
     def can_castle_kingside(self, color: PlayerColor) -> bool:
-            
-            row = 7 if color == PlayerColor.WHITE else 0
-            king = self.get_piece((row, 4))
-            rook = self.get_piece((row, 7))
-            if not isinstance(king, King) or king.has_moved:
-                return False
-            if not isinstance(rook, Rook) or rook.has_moved:
-                return False
-            
-            # Check if squares between king and rook are empty
-            for col in range(5, 7):
-                if not self.is_square_empty((row, col)):
-                    return False
+        row = 7 if color == PlayerColor.WHITE else 0
+        king = self.get_piece((row, 4))
+        rook = self.get_piece((row, 7))
+        if not isinstance(king, King) or king.has_moved:
+            return False
+        if not isinstance(rook, Rook) or rook.has_moved:
+            return False
 
-            # Check if squares king moves through are not attacked
-            opponent_possible_moves = self.get_opponent_possible_moves_without_check(color)
-            for col in range(4, 8):
-                if (row, col) in opponent_possible_moves:
-                    return False
-            return True
-    
+        # Check if squares between king and rook are empty
+        for col in range(5, 7):
+            if not self.is_square_empty((row, col)):
+                return False
+
+        # Check if squares king moves through are not attacked
+        opponent_possible_moves = self.get_opponent_possible_moves_without_check(color)
+        for col in range(4, 8):
+            if (row, col) in opponent_possible_moves:
+                return False
+        return True
+
     def can_castle_queenside(self, color: PlayerColor) -> bool:
-            row = 7 if color == PlayerColor.WHITE else 0
-            king = self.get_piece((row, 4))
-            rook = self.get_piece((row, 0))
-            if not isinstance(king, King) or king.has_moved:
-                return False
-            if not isinstance(rook, Rook) or rook.has_moved:
-                return False
-            
-            # Check if squares between king and rook are empty
-            for col in range(1, 3+1):
-                if not self.is_square_empty((row, col)):
-                    return False
+        row = 7 if color == PlayerColor.WHITE else 0
+        king = self.get_piece((row, 4))
+        rook = self.get_piece((row, 0))
+        if not isinstance(king, King) or king.has_moved:
+            return False
+        if not isinstance(rook, Rook) or rook.has_moved:
+            return False
 
-            # Check if squares king moves through are not attacked
-            opponent_possible_moves = self.get_opponent_possible_moves_without_check(color)
-            for col in range(0, 4+1):
-                if (row, col) in opponent_possible_moves:
-                    return False
-            return True  
-    
+        # Check if squares between king and rook are empty
+        for col in range(1, 3 + 1):
+            if not self.is_square_empty((row, col)):
+                return False
+
+        # Check if squares king moves through are not attacked
+        opponent_possible_moves = self.get_opponent_possible_moves_without_check(color)
+        for col in range(0, 4 + 1):
+            if (row, col) in opponent_possible_moves:
+                return False
+        return True
 
     def __deepcopy__(self, memo):
         new_board = ChessBoard()

@@ -20,9 +20,7 @@ class Bishop(ChessPiece):
         row, col = self.position
 
         # Define direction vectors
-        directions = [
-            (1, 1), (1, -1), (-1, 1), (-1, -1)   # Diagonal
-        ]
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # Diagonal
 
         # Iterate through directions
         for dr, dc in directions:
@@ -44,6 +42,10 @@ class Bishop(ChessPiece):
 
     def to_str(self):
         return "Bishop"
+
+    @staticmethod
+    def to_char():
+        return "B"
 
     def __str__(self):
         return f"<{self.color.value.title()} Bishop at {position_to_string(self.position)}>"

@@ -20,17 +20,23 @@ class King(ChessPiece):
 
         row, col = self.position
         directions = [
-            (-1, -1), (-1, 0), (-1, 1),
-            (0, -1),           (0, 1),
-            (1, -1),  (1, 0),  (1, 1)
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
         ]
 
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
             if 0 <= new_row < 8 and 0 <= new_col < 8:
-                if board.is_square_empty((new_row, new_col)) or \
-                board.is_opponent_piece(self.color, (new_row, new_col)):
-                        moves.append((new_row, new_col))
+                if board.is_square_empty((new_row, new_col)) or board.is_opponent_piece(
+                    self.color, (new_row, new_col)
+                ):
+                    moves.append((new_row, new_col))
 
         return moves
 
@@ -40,5 +46,11 @@ class King(ChessPiece):
     def to_str(self):
         return "King"
 
+    @staticmethod
+    def to_char():
+        return "K"
+
     def __str__(self):
-        return f"<{self.color.value.title()} King at {position_to_string(self.position)}>"
+        return (
+            f"<{self.color.value.title()} King at {position_to_string(self.position)}>"
+        )

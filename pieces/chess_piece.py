@@ -8,11 +8,13 @@ Position = tuple[int, int]
 
 
 class PlayerColor(Enum):
-    WHITE = 'white'
-    BLACK = 'black'
-    
+    WHITE = "white"
+    BLACK = "black"
+
 
 class ChessPiece:
+    value: int
+
     def __init__(self, color: PlayerColor, position: Position):
         self.color: PlayerColor = color
         self.position: Position = position
@@ -21,4 +23,8 @@ class ChessPiece:
         pass
 
     def to_str(self) -> str:
+        pass
+
+    @staticmethod
+    def to_char() -> str:
         pass
