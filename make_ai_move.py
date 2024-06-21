@@ -5,7 +5,11 @@ from dotenv import load_dotenv
 
 from chess_board import ChessBoard
 from pieces import PlayerColor
-from utils.llm_output_parser import PydanticOutputParser, PydanticYAMLOutputParser, OutputFixingParser
+from utils.llm_output_parser import (
+    PydanticOutputParser,
+    PydanticYAMLOutputParser,
+    OutputFixingParser,
+)
 
 
 load_dotenv()
@@ -21,6 +25,7 @@ VALID_MODELS = [
     "gpt-4-turbo",
     "gpt-4",
     "gpt-3.5-turbo",
+    "claude-3.5-sonnet",
     "claude-3-opus",
     "claude-3-sonnet",
     "claude-3-haiku",
@@ -39,6 +44,14 @@ VALID_MODELS = [
     "mixtral-8x22b-instruct",
     "mixtral-8x7b-instruct",
     "mistral-7b-instruct",
+]
+
+VISION_MODELS = [
+    "gpt-4o",
+    "claude-3.5-sonnet",
+    "claude-3-opus",
+    "claude-3-sonnet",
+    "claude-3-haiku",
 ]
 
 
@@ -137,6 +150,8 @@ Here again are the valid moves you can choose from:
 <valid_moves>
 {{VALID_MOVES}}
 </valid_moves>
+
+{{BOARD_IMAGE}}
 """
 
 
@@ -168,6 +183,7 @@ async def make_ai_move(
     memory: str = None,
     move_history: str = None,
     last_k_move_history: int = 5,
+    board_image: str = None,
 ) -> dict:
     """
     Function to make AI move
@@ -178,6 +194,7 @@ async def make_ai_move(
     :param memory: str: Memory
     :param move_history: str: Move history
     :param last_k_move_history: int: Last k move history
+    :param board_image: str: Board image in base64 format
     :return: dict: Move
     """
     board_state = str(board)
@@ -188,9 +205,16 @@ async def make_ai_move(
     total_invalid_moves = len(prev_invalid_moves) if prev_invalid_moves else 0
 
     # Convert dictionaries to tuples of key-value pairs
-    prev_invalid_moves_tuples = [tuple(move.items()) for move in prev_invalid_moves] if prev_invalid_moves else []
-    prev_invalid_moves = [dict(move_tuple) for move_tuple in
-                          set(prev_invalid_moves_tuples)] if prev_invalid_moves_tuples else []
+    prev_invalid_moves_tuples = (
+        [tuple(move.items()) for move in prev_invalid_moves]
+        if prev_invalid_moves
+        else []
+    )
+    prev_invalid_moves = (
+        [dict(move_tuple) for move_tuple in set(prev_invalid_moves_tuples)]
+        if prev_invalid_moves_tuples
+        else []
+    )
     prev_invalid_moves_str = ""
 
     last_k_invalid_moves = 3
@@ -199,7 +223,10 @@ async def make_ai_move(
 
     if prev_invalid_moves:
         prev_invalid_moves_str = "\n".join(
-            [f"  - {move['piece']}: {move['source']} to {move['destination']}" for move in prev_invalid_moves]
+            [
+                f"  - {move['piece']}: {move['source']} to {move['destination']}"
+                for move in prev_invalid_moves
+            ]
         )
         attempt_count = len(prev_invalid_moves)
         prev_invalid_moves_str = f"""This is attempt {attempt_count}. Previously, you tried the following moves, which 
@@ -218,31 +245,51 @@ DO NOT repeat any of these moves as they are INVALID. You may ONLY choose from t
         move_history = "\n".join(move_history)
 
     memory = memory if total_invalid_moves < 5 else ""
+    is_vision_model = ai_model in VISION_MODELS
+    board_image_str = (
+        "You will also be provided with an image of the current state of the board."
+        if is_vision_model
+        else ""
+    )
+
+    content_str = (
+        user_prompt.replace("{{BOARD_STATE}}", board_state)
+        .replace("{{VALID_MOVES}}", valid_moves)
+        .replace("{{CURR_PLAYER}}", curr_player)
+        .replace("{{FORMAT_INSTRUCTIONS}}", format_instructions)
+        .replace("{{PREV_INVALID_MOVES}}", prev_invalid_moves_str)
+        .replace("{{MEMORY}}", memory or "")
+        .replace("{{MOVE_HISTORY}}", move_history or "")
+        .replace("{{NUM_MOVE_HISTORY}}", str(last_k_move_history))
+        .replace("{{BOARD_IMAGE}}", board_image_str)
+    )
+
+    user_content = [
+        {
+            "type": "text",
+            "text": content_str
+        },
+    ]
+    if is_vision_model:
+        user_content.append(
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/png;base64,{board_image}"
+                }
+            }
+        )
+
     prompt_messages = [
         {
             "role": "user",
-            "content": (
-                user_prompt.replace("{{BOARD_STATE}}", board_state)
-                .replace("{{VALID_MOVES}}", valid_moves)
-                .replace("{{CURR_PLAYER}}", curr_player)
-                .replace("{{FORMAT_INSTRUCTIONS}}", format_instructions)
-                .replace("{{PREV_INVALID_MOVES}}", prev_invalid_moves_str)
-                .replace("{{MEMORY}}", memory or "")
-                .replace("{{MOVE_HISTORY}}", move_history or "")
-                .replace("{{NUM_MOVE_HISTORY}}", str(last_k_move_history))
-            )
+            "content": user_content,
         }
     ]
-
-    print("move hisytory test:", last_k_move_history, move_history)
-
-    temperature = 0.5
-    temperature += len(prev_invalid_moves) * 0.1
-    temperature = min(1.0, temperature)
+    temperature = 1
 
     response = await client.chat.completions.create(
         model=ai_model,
-        # model=["tag:llm-chess-engine"],  # type: ignore
         messages=prompt_messages,
         temperature=temperature,
     )

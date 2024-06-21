@@ -63,7 +63,9 @@ class ChessBoard:
                 piece_name = piece.to_str()
                 piece_position = self.get_position_string(piece.position)
                 move_strings = [self.get_position_string(move) for move in moves]
-                out_str += f"{piece_name} at {piece_position}: {', '.join(move_strings)}\n"
+                out_str += (
+                    f"{piece_name} at {piece_position}: {', '.join(move_strings)}\n"
+                )
 
         return out_str
 
@@ -73,7 +75,7 @@ class ChessBoard:
         Returns the string representation of a position (e.g., 'e4', 'a8')
         """
         row, col = position
-        col_str = chr(ord('a') + col)
+        col_str = chr(ord("a") + col)
         row_str = str(8 - row)
         return col_str + row_str
 
@@ -84,7 +86,7 @@ class ChessBoard:
         """
         col_str = position_str[0]
         row_str = position_str[1]
-        col = ord(col_str) - ord('a')
+        col = ord(col_str) - ord("a")
         row = 8 - int(row_str)
         return row, col
 
@@ -203,7 +205,9 @@ class ChessBoard:
                         black_score += piece.value
         return white_score, black_score
 
-    def move_piece(self, piece: ChessPiece, new_position: Position) -> tuple[bool, bool]:
+    def move_piece(
+        self, piece: ChessPiece, new_position: Position
+    ) -> tuple[bool, bool]:
         """
         Moves a piece on the board, returns False if invalid move
         """
@@ -228,7 +232,9 @@ class ChessBoard:
         self.moves.append((piece.to_str(), piece.position, new_position))
 
         was_capture = not self.is_square_empty(new_position)
-        was_pawn_move = isinstance(piece, Pawn) and (old_row != new_row or old_col != new_col)
+        was_pawn_move = isinstance(piece, Pawn) and (
+            old_row != new_row or old_col != new_col
+        )
 
         # Move the piece
         self.board[old_row][old_col] = None
@@ -238,7 +244,8 @@ class ChessBoard:
         # Check for pawn promotion
         if isinstance(piece, Pawn):
             if (piece.color == PlayerColor.WHITE and new_row == 0) or (
-                    piece.color == PlayerColor.BLACK and new_row == 7):
+                piece.color == PlayerColor.BLACK and new_row == 7
+            ):
                 self.board[new_row][new_col] = Queen(piece.color, new_position)
 
         # If Castle move: Move the Rook as well
