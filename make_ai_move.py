@@ -21,9 +21,13 @@ client = AsyncOpenAI(
 
 
 VALID_MODELS = [
+    "llama-3.1-405b-instruct",
+    "llama-3.1-70b-instruct",
+    "llama-3.1-8b-instruct",
     "gpt-4o",
     "gpt-4-turbo",
     "gpt-4",
+    "gpt-4o-mini",
     "gpt-3.5-turbo",
     "claude-3.5-sonnet",
     "claude-3-opus",
