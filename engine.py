@@ -16,12 +16,12 @@ def minimax(
     alpha: float = -float("inf"),
     beta: float = float("inf"),
     cache: Optional[
-        dict[str, tuple[Optional[ChessPiece], Optional[Position], int]]
+        dict[str, tuple[Optional[ChessPiece], Optional[Position], Optional[int], bool]]
     ] = None,
     start_time: time = None,
     time_limit: time = None,
     lmr_move_count: int = 100,
-) -> Tuple[Optional[ChessPiece], Optional[Position], int]:
+) -> Tuple[Optional[ChessPiece], Optional[Position], Optional[int], bool]:
     """
     Minimax algorithm with alpha-beta pruning for the chess AI
 
@@ -31,10 +31,10 @@ def minimax(
         player_color (PlayerColor): Color of the current player.
         alpha (float, optional): Alpha value for alpha-beta pruning. Defaults to -float('inf').
         beta (float, optional): Beta value for alpha-beta pruning. Defaults to float('inf').
-        cache (Optional[dict[str, tuple[Optional[ChessPiece], Optional[Position], int]]], optional): A dictionary to store previously computed board evaluations. Defaults to None.
+        cache (Optional[dict[str, tuple[Optional[ChessPiece], Optional[Position], Optional[int], bool]]], optional): A dictionary to store previously computed board evaluations. Defaults to None.
         lmr_move_count (int): how many moves to do full depth search, rest do shallower search
     Returns:
-        Tuple[Optional[ChessPiece], Optional[Position], int, bool]: Best piece, best move, score of the best move, terminated due to time.
+        Tuple[Optional[ChessPiece], Optional[Position], Optional[int], bool]: Best piece, best move, score of the best move, terminated due to time.
     """
 
     if cache is None:
